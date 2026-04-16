@@ -1,0 +1,74 @@
+# Base configuration for trading research experiments
+# Override specific keys per experiment; do not modify this file directly.
+
+data:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  symbols:
+    - AAPL
+    - MSFT
+    - GOOGL
+    - AMZN
+    - SPY
+  # Date range for full dataset
+  start_date: "2015-01-01"
+  end_date: "2023-12-31"
+
+splits:
+  # Fractions must sum to 1.0
+  train: 0.6
+  validation: 0.2
+  test: 0.2
+  # Walk-forward settings
+  walkforward_train_years: 2
+  walkforward_val_years: 1
+  walkforward_step_months: 6
+
+features:
+  return_windows: [5, 20, 50]       # days for rolling return calculation
+  volatility_window: 20             # days for rolling std
+  ma_windows: [20, 50, 200]         # moving average periods
+  volume_ma_window: 20              # days for volume moving average
+
+strategy:
+  name: "momentum"                  # one of: momentum, mean_reversion, ma_crossover
+  # Momentum strategy params
+  momentum:
+    lookback: 20                    # days for signal calculation
+    top_n: 5                        # number of stocks to hold
+  # Mean reversion params
+  mean_reversion:
+    lookback: 20
+    z_score_entry: -1.5             # z-score threshold to go long
+    z_score_exit: 0.5               # z-score threshold to exit
+    top_n: 5
+  # MA crossover params
+  ma_crossover:
+    fast_window: 20
+    slow_window: 50
+
+portfolio:
+  max_positions: 10                 # hard cap on simultaneous positions (null = no cap)
+  max_position_size: 0.20           # max fraction per position (null = equal weight)
+  cash_when_no_signal: true
+
+backtest:
+  transaction_cost_bps: 10         # one-way cost in basis points (10 bps = 0.10%)
+  slippage_bps: 5                  # one-way slippage in basis points
+  initial_capital: 100000.0        # starting capital in dollars
+
+scoring:
+  min_trades: 20                   # hard-fail if fewer trades than this
+  max_drawdown_threshold: 0.40     # hard-fail if max drawdown exceeds this (40%)
+  max_annual_turnover: 20.0        # hard-fail if annualised turnover exceeds this
+  concentration_hhi_threshold: 0.5 # hard-fail if HHI above this (0.5 = highly concentrated)
+  sortino_risk_free: 0.0           # risk-free rate for Sortino ratio
+  drawdown_penalty_weight: 0.5     # multiplier applied to drawdown penalty
+  turnover_penalty_weight: 0.1     # multiplier applied to turnover penalty
+
+experiment:
+  log_path: "experiments/experiment_log.jsonl"
+  best_configs_dir: "experiments/best_configs"
+  notes: ""                        # agent can populate this field with rationale
+
+random_seed: 42
